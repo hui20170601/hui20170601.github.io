@@ -1,0 +1,150 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>title</title>
+</head>
+
+<body>
+    <canvas width="800" height="600" style="border:1px solid red"></canvas>
+
+</body>
+
+</html>
+<script type="text/javascript" src="jquery-1.12.2.min.js"></script>
+<script type="text/javascript">
+    var canvas = document.querySelector('canvas');
+    var Clock = (function() {
+        function Clock(opt) {
+            if (!opt) throw new Error("参数必填");
+            var requireArgs = "canvas,bigX,bigY,bigRandius".split(',');
+            requireArgs.forEach(function(v) {
+                if (!opt.hasOwnProperty(v)) throw new Error("请给参数添加属性:" + v);
+            });
+            var defaultOPt = {
+                bigWidth: 10,
+                bigColor: "blue",
+                tick: {
+                    long: {
+                        length: 20,
+                        width: 8
+                    },
+                    short: {
+                        length: 10,
+                        width: 4
+                    }
+                },
+                tickColor: "black",
+                secondLength: 55,
+                minuteLength: 40,
+                hourLength: 25,
+                secondColor: "black",
+                minuteColor: "black",
+                hourColor: "black"
+            }
+            $.extend(this, defaultOPt, opt);
+            this.ctx = this.canvas.getContext("2d");
+            this.ctx.font = "20px 微软雅黑";
+            this.ctx.textAlign = "center";
+            this.ctx.textBaseline = "middle";
+            this.init();
+        }
+        Clock.prototype = {
+            constructor: Clock,
+            init: function() {
+                var self = this;
+                var timer = setInterval(function() {
+                    self.ctx.clearRect(0, 0, self.canvas.width, self.canvas.height);
+                    self.drawBigCircle();
+                    self.drawTicks();
+                    self.drawPoint();
+                    self.ctx.fillText(new Date().toLocaleString(), 300, 100)
+                }, 1000);
+            },
+            drawBigCircle: function() {
+
+                this.ctx.arc(this.bigX, this.bigY, this.bigRandius, 0, 2 * Math.PI);
+                this.ctx.strokeStyle = this.bigColor;
+                this.ctx.lineWidth = this.bigWidth;
+                this.ctx.stroke();
+                this.ctx.beginPath();
+            },
+            drawTicks: function() {
+                for (var i = 0; i < 60; i++) {
+                    var randian = -Math.PI / 3 + i * Math.PI * 2 / 60;
+                    var length = this.bigRandius - this.bigWidth / 2;
+                    var tickLength = this.tick[i % 5 == 0 ? "long" : "short"].length;
+                    var tickWidth = this.tick[i % 5 == 0 ? "long" : "short"].width;
+                    var shortTickStartX = (length - tickLength) * Math.cos(randian) + this.bigX;
+                    var shortTickStartY = (length - tickLength) * Math.sin(randian) + this.bigY;
+                    var shortTickEndX = length * Math.cos(randian) + this.bigX;
+                    var shortTickEndY = length * Math.sin(randian) + this.bigY;
+                    this.ctx.moveTo(shortTickStartX, shortTickStartY);
+                    this.ctx.lineTo(shortTickEndX, shortTickEndY);
+                    this.ctx.strokeStyle = this.tickColor;
+                    this.ctx.lineWidth = tickWidth;
+                    this.ctx.stroke();
+                    this.ctx.beginPath();
+                    if (i % 5 == 0) {
+                        this.drawText(i / 5 + 1, randian);
+
+                    }
+                }
+            },
+            drawText: function(text, randian) {
+                var x = (this.bigRandius - 40) * Math.cos(randian) + this.bigX;
+                var y = (this.bigRandius - 40) * Math.sin(randian) + this.bigY;
+                this.ctx.fillText(text, x, y);
+            },
+            drawPoint: function() {
+                var date = new Date();
+                var hour = date.getHours() % 12;
+                var minute = date.getMinutes();
+                var second = date.getSeconds();
+                var secondRandian = -Math.PI / 2 + second / 60 * 2 * Math.PI;
+                var minuteRandian = -Math.PI / 2 + (minute * 60 + second) / (60 * 60) * 2 * Math.PI;
+                var hourRandian = -Math.PI / 2 + (hour * 3600 + minute * 60 + second) / (12 * 3600) * 2 * Math.PI;
+                this.drawSinglePoint(this.secondLength, secondRandian, this.secondColor);
+                this.drawSinglePoint(this.minuteLength, minuteRandian, this.minuteColor);
+                this.drawSinglePoint(this.hourLength, hourRandian, this.hourColor);
+            },
+            drawSinglePoint: function(length, randian, color) {
+                var x = length * Math.cos(randian) + this.bigX;
+                var y = length * Math.sin(randian) + this.bigY;
+                this.ctx.moveTo(this.bigX, this.bigY);
+                this.ctx.lineTo(x, y);
+                this.ctx.strokeStyle = color;
+                this.ctx.stroke();
+                this.ctx.beginPath();
+            }
+        }
+        return Clock;
+    })();
+
+    new Clock({
+        canvas: canvas,
+        bigX: 300,
+        bigY: 300,
+        bigRandius: 150,
+        bigWidth: 10,
+        bigColor: "blue",
+        tick: {
+            long: {
+                length: 20,
+                width: 8
+            },
+            short: {
+                length: 10,
+                width: 4
+            }
+        },
+        tickColor: "black",
+        secondLength: 55,
+        minuteLength: 40,
+        hourLength: 25,
+        secondColor: "red",
+        minuteColor: "blue",
+        hourColor: "green"
+    })
+</script>
